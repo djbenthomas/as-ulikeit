@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Book Liv N the Dream — Live Band</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    input, select, textarea { color-scheme: dark; }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-xl max-w-xl w-full p-8">
+    <div class="flex items-center gap-3 mb-2">
+      <div>
+        <h1 class="text-3xl font-bold">Book Liv N the Dream</h1>
+        <p class="text-sm text-gray-500">Live Band • Nashville, TN</p>
+      </div>
+    </div>
+    <p class="text-gray-600 mb-1">Secure your date with a 25% deposit</p>
+    <p class="text-gray-500 text-xs mb-2">Saturday rates shown — discounts apply for other days</p>
+    <div id="dayDiscount" class="text-green-700 font-semibold mb-6 text-sm"></div>
+
+    <form id="bookingForm" class="space-y-4" action="https://formsubmit.co/bennythomasband@gmail.com" method="POST">
+      <input type="hidden" name="_subject" value="New Liv N the Dream Booking Request">
+      <input type="hidden" name="_template" value="table">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="hidden" name="day-of-week" id="dayOfWeek">
+      <input type="hidden" name="discount-applied" id="discountApplied">
+      <input type="hidden" name="total-before-discount" id="totalBeforeDiscount">
+
+      <div>
+        <label class="block text-sm font-medium">Full Name</label>
+        <input required class="w-full border rounded p-2" type="text" name="name">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium">Email</label>
+        <input required class="w-full border rounded p-2" type="email" name="email">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium">Phone</label>
+        <input required class="w-full border rounded p-2" type="tel" name="phone">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium">Event Location (City / Venue)</label>
+        <input required class="w-full border rounded p-2" type="text" name="location">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium">Event Date</label>
+        <input required class="w-full border rounded p-2" type="date" name="date" id="eventDate" onchange="updatePricing()">
+        <p class="text-xs text-gray-400 mt-1" id="dayHint"></p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium">Event Type</label>
+        <select class="w-full border rounded p-2" name="type">
+          <option>Wedding</option>
+          <option>Corporate Event</option>
+          <option>Private Party</option>
+          <option>Festival</option>
+          <option>Bar / Club</option>
+          <option>Other</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium">Package</label>
+        <select class="w-full border rounded p-2" name="package" id="packageSelect" onchange="updatePricing()">
+          <option value="2500">Standard – 4 Hours ($2,500)</option>
+          <option value="3500">Premium – 5 Hours w/ Liv Joy ($3,500)</option>
+          <option value="4200">Ceremony + Reception – Full Wedding ($4,200)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium">Add-Ons</label>
+        <div class="space-y-2">
+          <label class="flex items-center gap-2"><input type="checkbox" name="addons" value="Ceremony Audio" data-price="0" onchange="updatePricing()"> Ceremony Audio (FREE)</label>
+          <label class="flex items-center gap-2"><input type="checkbox" name="addons" value="Cocktail Hour Acoustic" data-price="0" onchange="updatePricing()"> Cocktail Hour Acoustic Set (FREE w/ Premium)</label>
+          <label class="flex items-center gap-2"><input type="checkbox" name="addons" value="Extra Hour" data-price="200" onchange="updatePricing()"> Extra Hour ($200)</label>
+          <label class="flex items-center gap-2"><input type="checkbox" name="addons" value="Lighting Package" data-price="250" onchange="updatePricing()"> Lighting Package ($250)</label>
+          <label class="flex items-center gap-2"><input type="checkbox" name="addons" value="MC Services" data-price="150" onchange="updatePricing()"> MC / Emcee Services ($150)</label>
+          <label class="flex items-center gap-2"><input type="checkbox" name="addons" value="DJ Services" data-price="500" onchange="updatePricing()"> DJ + Band Combo ($500)</label>
+        </div>
+      </div>
+
+      <div class="bg-gray-50 border rounded p-3">
+        <p class="text-xs text-gray-600 mb-1">* Travel fee: $50 if over 40 miles from Hendersonville, TN</p>
+        <p class="text-sm" id="discountDisplay"></p>
+        <p class="text-sm">Total: <span id="totalPrice" class="font-bold">$2,500</span></p>
+        <p class="text-sm font-semibold">Deposit (25%): <span id="depositAmount">$625</span></p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium">Message (optional)</label>
+        <textarea name="message" rows="3" class="w-full border rounded p-2"></textarea>
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg text-lg">📩 Send Booking Request</button>
+    </form>
+
+    <p class="text-center text-gray-400 text-xs mt-4">Questions? Call or text <strong>(661) 533-0100</strong></p>
+  </div>
+
+  <script>
+    const basePrices = { 2500: 2500, 3500: 3500, 4200: 4200 };
+    const discounts = { 0: 0.20, 1: 0.20, 2: 0.20, 3: 0.20, 4: 0.20, 5: 0.10, 6: 0 };
+    const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+    function updatePricing() {
+      const dateInput = document.getElementById('eventDate');
+      const packageSelect = document.getElementById('packageSelect');
+      const totalSpan = document.getElementById('totalPrice');
+      const depositSpan = document.getElementById('depositAmount');
+      const dayHint = document.getElementById('dayHint');
+      const discountDisplay = document.getElementById('discountDisplay');
+      const dayDiscountEl = document.getElementById('dayDiscount');
+      const dayOfWeekInput = document.getElementById('dayOfWeek');
+      const discountAppliedInput = document.getElementById('discountApplied');
+      const totalBeforeInput = document.getElementById('totalBeforeDiscount');
+
+      let basePrice = parseInt(packageSelect.value);
+
+      if (dateInput.value) {
+        const date = new Date(dateInput.value + 'T12:00:00');
+        const day = date.getDay(); // 0=Sun, 1=Mon...6=Sat
+        const dayName = dayNames[day === 0 ? 6 : day - 1];
+        const discount = discounts[day] || 0;
+
+        dayOfWeekInput.value = dayName;
+        dayHint.textContent = dayName;
+
+        let discountText = '';
+        if (day === 6) {
+          discountText = 'Saturday — Full rate (peak pricing)';
+          dayDiscountEl.textContent = '📅 Saturday — standard rates apply';
+          discountDisplay.textContent = '';
+        } else if (day === 5) {
+          discountText = 'Friday — 10% off!';
+          dayDiscountEl.textContent = '🎉 Friday special — 10% off!';
+          discountDisplay.textContent = 'Friday discount: 10% off';
+        } else {
+          const pct = Math.round(discount * 100);
+          discountText = dayName + ' — ' + pct + '% off!';
+          dayDiscountEl.textContent = '🔥 ' + dayName + ' special — ' + pct + '% off!';
+          discountDisplay.textContent = dayName + ' discount: ' + pct + '% off';
+        }
+
+        // Calculate add-ons
+        let addonTotal = 0;
+        document.querySelectorAll('input[name="addons"]:checked').forEach(cb => {
+          addonTotal += parseInt(cb.dataset.price) || 0;
+        });
+
+        const beforeDiscount = basePrice + addonTotal;
+        const discountedPrice = beforeDiscount * (1 - discount);
+        const total = Math.round(discountedPrice);
+        const deposit = Math.round(total * 0.25);
+
+        totalBeforeInput.value = '$' + beforeDiscount;
+        discountAppliedInput.value = discountText;
+
+        totalSpan.textContent = '$' + total.toLocaleString();
+        depositSpan.textContent = '$' + deposit.toLocaleString();
+      } else {
+        dayHint.textContent = 'Pick a date to see pricing by day';
+        dayDiscountEl.textContent = '';
+        discountDisplay.textContent = '';
+
+        let addonTotal = 0;
+        document.querySelectorAll('input[name="addons"]:checked').forEach(cb => {
+          addonTotal += parseInt(cb.dataset.price) || 0;
+        });
+
+        const total = basePrice + addonTotal;
+        const deposit = Math.round(total * 0.25);
+        totalSpan.textContent = '$' + total.toLocaleString();
+        depositSpan.textContent = '$' + deposit.toLocaleString();
+      }
+    }
+  </script>
+</body>
+</html>
