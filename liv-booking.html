@@ -76,6 +76,17 @@
           <option value="4200">Ceremony + Reception – Full Wedding ($4,200)</option>
         </select>
       </div>
+      
+      <div class="bg-yellow-50 border border-yellow-200 rounded p-3">
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input type="checkbox" name="grahams" id="grahamsCheck" value="yes" onchange="updatePricing()" class="mt-1">
+          <div>
+            <p class="font-semibold text-yellow-800">🏛️ Booking at Grahams Estate?</p>
+            <p class="text-sm text-yellow-700">Get <strong>$1,000 off</strong> when you book Liv N the Dream at Grahams Estate in Gallatin, TN!</p>
+          </div>
+        </label>
+      </div>
+      </div>
 
       <div>
         <label class="block text-sm font-medium">Add-Ons</label>
@@ -87,6 +98,7 @@
           <label class="flex items-center gap-2"><input type="checkbox" name="addons" value="MC Services" data-price="150" onchange="updatePricing()"> MC / Emcee Services ($150)</label>
           <label class="flex items-center gap-2"><input type="checkbox" name="addons" value="DJ Services" data-price="500" onchange="updatePricing()"> DJ + Band Combo ($500)</label>
         </div>
+        <p class="text-xs text-green-700 font-semibold mt-2">🎁 <strong>FREE Photo Booth</strong> included when you book the band! ($300 value)</p>
       </div>
 
       <div class="bg-gray-50 border rounded p-3">
@@ -110,6 +122,7 @@
   <script>
     const basePrices = { 2500: 2500, 3500: 3500, 4200: 4200 };
     const discounts = { 0: 0.20, 1: 0.20, 2: 0.20, 3: 0.20, 4: 0.20, 5: 0.10, 6: 0 };
+    const grahamsDiscount = 1000;
     const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
     function updatePricing() {
@@ -157,13 +170,22 @@
           addonTotal += parseInt(cb.dataset.price) || 0;
         });
 
+        const grahamsActive = document.getElementById('grahamsCheck').checked;
         const beforeDiscount = basePrice + addonTotal;
-        const discountedPrice = beforeDiscount * (1 - discount);
-        const total = Math.round(discountedPrice);
+        const dayDiscountPrice = beforeDiscount * (1 - discount);
+        let total = Math.round(dayDiscountPrice);
+        
+        let grahamsText = '';
+        if (grahamsActive) {
+          total = total - grahamsDiscount;
+          grahamsText = ' (includes $1,000 Grahams Estate discount!)';
+        }
+        if (total < 0) total = 0;
+        
         const deposit = Math.round(total * 0.25);
 
         totalBeforeInput.value = '$' + beforeDiscount;
-        discountAppliedInput.value = discountText;
+        discountAppliedInput.value = discountText + grahamsText;
 
         totalSpan.textContent = '$' + total.toLocaleString();
         depositSpan.textContent = '$' + deposit.toLocaleString();
@@ -177,7 +199,12 @@
           addonTotal += parseInt(cb.dataset.price) || 0;
         });
 
-        const total = basePrice + addonTotal;
+        const grahamsActive = document.getElementById('grahamsCheck').checked;
+        let total = basePrice + addonTotal;
+        if (grahamsActive) {
+          total = total - grahamsDiscount;
+        }
+        if (total < 0) total = 0;
         const deposit = Math.round(total * 0.25);
         totalSpan.textContent = '$' + total.toLocaleString();
         depositSpan.textContent = '$' + deposit.toLocaleString();
